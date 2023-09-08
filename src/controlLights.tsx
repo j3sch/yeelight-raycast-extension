@@ -3,6 +3,7 @@ import { Action, ActionPanel, List, Icon, Color } from "@raycast/api";
 import SetBrightnessForm from "./setBrightnessForm";
 import { DeviceStatus, Discover, Yeelight } from "yeelight-awesome";
 
+const LIGHT_PORT = 55443;
 interface Light {
   host: string;
   port: number;
@@ -40,7 +41,7 @@ export default function Command() {
   async function toggleLight(light: Light, index: number) {
     const yeelight = new Yeelight({
       lightIp: light.host,
-      lightPort: 55443,
+      lightPort: LIGHT_PORT,
     });
 
     yeelight.connect().then((l) => {
@@ -58,7 +59,7 @@ export default function Command() {
   async function changeBrightness(light: Light, index: number, addBrightness: number) {
     const yeelight = new Yeelight({
       lightIp: light.host,
-      lightPort: 55443,
+      lightPort: LIGHT_PORT,
     });
     yeelight.connect().then((l) => {
       let newBrightness = light.bright + addBrightness;
@@ -95,7 +96,7 @@ export default function Command() {
   function onSetBrightness({ bright, index }: { bright: number; index: number }): void {
     const yeelight = new Yeelight({
       lightIp: lights[index].host,
-      lightPort: 55443,
+      lightPort: LIGHT_PORT,
     });
 
     yeelight.connect().then((l) => {
