@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Action, ActionPanel, List, Icon, Color } from "@raycast/api";
+import { Action, ActionPanel, List, Icon, Color, Detail } from "@raycast/api";
 import SetBrightnessForm from "./setBrightnessForm";
 import { DeviceStatus, Discover, Yeelight } from "yeelight-awesome";
 
@@ -13,6 +13,7 @@ interface Light {
 
 export default function Command() {
   const [lights, setLights] = useState<Light[]>([]);
+  const [isLoading, setLoading] = useState(true);
 
   function startDiscover() {
     const discover = new Discover({ debug: false });
@@ -31,6 +32,9 @@ export default function Command() {
       })
       .catch(() => {
         discover.destroy();
+      })
+      .finally(() => {
+        setLoading(false);
       });
   }
 
@@ -108,47 +112,67 @@ export default function Command() {
   }
 
   return (
-    <List>
-      {lights.map((light, index) => (
-        <List.Item
-          key={index}
-          title={light.host}
-          subtitle={`${light.bright}%`}
-          icon={{ source: Icon.Circle, tintColor: light.status === DeviceStatus.ON ? Color.Green : Color.Red }}
-          actions={
-            <ActionPanel>
-              <Action
-                title={light.status === DeviceStatus.OFF ? "Turn On" : "Turn Off"}
-                onAction={() => toggleLight(light, index)}
-              />
-              {light.status === DeviceStatus.ON && (
-                <>
-                  <Action.Push
-                    icon={Icon.Pencil}
-                    title="Set Brightness"
-                    shortcut={{ modifiers: ["cmd"], key: "e" }}
-                    target={
-                      <SetBrightnessForm currBright={light.bright} onSetBrightness={onSetBrightness} index={index} />
-                    }
-                  />
-                  <Action
-                    icon={Icon.Plus}
-                    title="Increase Brightness"
-                    shortcut={{ modifiers: ["cmd"], key: "+" }}
-                    onAction={() => changeBrightness(light, index, 10)}
-                  />
-                  <Action
-                    icon={Icon.Minus}
-                    title="Decrease Brightness"
-                    shortcut={{ modifiers: ["cmd"], key: "-" }}
-                    onAction={() => changeBrightness(light, index, -10)}
-                  />
-                </>
-              )}
-            </ActionPanel>
-          }
-        />
-      ))}
-    </List>
+    <>
+      {isLoading ? (
+        <Detail isLoading={isLoading} />
+      ) : (
+        <>
+          {lights.length === 0 ? (
+            <Detail
+              markdown="No lights were found.  
+Is lan control activated for your lights?
+See the README on how to enable it."
+            />
+          ) : (
+            <List>
+              {lights.map((light, index) => (
+                <List.Item
+                  key={index}
+                  title={light.host}
+                  subtitle={`${light.bright}%`}
+                  icon={{ source: Icon.Circle, tintColor: light.status === DeviceStatus.ON ? Color.Green : Color.Red }}
+                  actions={
+                    <ActionPanel>
+                      <Action
+                        title={light.status === DeviceStatus.OFF ? "Turn On" : "Turn Off"}
+                        onAction={() => toggleLight(light, index)}
+                      />
+                      {light.status === DeviceStatus.ON && (
+                        <>
+                          <Action.Push
+                            icon={Icon.Pencil}
+                            title="Set Brightness"
+                            shortcut={{ modifiers: ["cmd"], key: "e" }}
+                            target={
+                              <SetBrightnessForm
+                                currBright={light.bright}
+                                onSetBrightness={onSetBrightness}
+                                index={index}
+                              />
+                            }
+                          />
+                          <Action
+                            icon={Icon.Plus}
+                            title="Increase Brightness"
+                            shortcut={{ modifiers: ["cmd"], key: "+" }}
+                            onAction={() => changeBrightness(light, index, 10)}
+                          />
+                          <Action
+                            icon={Icon.Minus}
+                            title="Decrease Brightness"
+                            shortcut={{ modifiers: ["cmd"], key: "-" }}
+                            onAction={() => changeBrightness(light, index, -10)}
+                          />
+                        </>
+                      )}
+                    </ActionPanel>
+                  }
+                />
+              ))}
+            </List>
+          )}
+        </>
+      )}
+    </>
   );
 }
